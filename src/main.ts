@@ -17,6 +17,10 @@ document.title = APP_NAME;
 
 //-------------------------Canvas-------------------------
 
+// Create a container for the canvas and buttons
+const container = document.createElement("div");
+container.className = "canvas-container";
+
 // Create a canvas element
 const canvas = document.createElement("canvas");
 
@@ -24,8 +28,8 @@ const canvas = document.createElement("canvas");
 canvas.width = 256;
 canvas.height = 256;
 
-// Append the canvas to the app
-app.appendChild(canvas);
+// Append the canvas to the container
+container.appendChild(canvas);
 
 //-------------------------Drawing with mouse -------------------------
 
@@ -95,7 +99,11 @@ canvas.addEventListener("mousemove", draw);
 canvas.addEventListener("mouseup", stopDrawing);
 canvas.addEventListener("mouseout", stopDrawing);
 
-//-------------------------Clear canvas button-------------------------
+//-------------------------Buttons-------------------------
+
+// Create a button container
+const buttonContainer = document.createElement("div");
+buttonContainer.className = "button-container";
 
 // Create a clear button
 const clearButton = document.createElement("button");
@@ -108,10 +116,8 @@ clearButton.addEventListener("click", () => {
   redrawCanvas(); // Redraw canvas to reflect clearing
 });
 
-// Append the clear button to the app
-app.appendChild(clearButton);
-
-//-------------------------Undo button-------------------------
+// Append the clear button to the button container
+buttonContainer.appendChild(clearButton);
 
 // Create an undo button
 const undoButton = document.createElement("button");
@@ -119,21 +125,19 @@ undoButton.textContent = "Undo";
 
 // Undo button event listener
 undoButton.addEventListener("click", () => {
-    if (paths.length > 0) {
-      const lastPath = paths.pop(); // Remove the last drawing path
-      if (lastPath) {
-        redoStack.push(lastPath); // Add it to the redo stack if not null
-      }
-      // Dispatch a custom event 'drawing-changed' to update the canvas
-      const event = new CustomEvent('drawing-changed');
-      canvas.dispatchEvent(event);
+  if (paths.length > 0) {
+    const lastPath = paths.pop(); // Remove the last drawing path
+    if (lastPath) {
+      redoStack.push(lastPath); // Add it to the redo stack if not null
     }
-  });
+    // Dispatch a custom event 'drawing-changed' to update the canvas
+    const event = new CustomEvent('drawing-changed');
+    canvas.dispatchEvent(event);
+  }
+});
 
-// Append the undo button to the app
-app.appendChild(undoButton);
-
-//-------------------------Redo button-------------------------
+// Append the undo button to the button container
+buttonContainer.appendChild(undoButton);
 
 // Create a redo button
 const redoButton = document.createElement("button");
@@ -150,5 +154,11 @@ redoButton.addEventListener("click", () => {
   }
 });
 
-// Append the redo button to the app
-app.appendChild(redoButton);
+// Append the redo button to the button container
+buttonContainer.appendChild(redoButton);
+
+// Append the button container to the main container
+container.appendChild(buttonContainer);
+
+// Append the main container to the app
+app.appendChild(container);
