@@ -117,16 +117,18 @@ app.appendChild(clearButton);
 const undoButton = document.createElement("button");
 undoButton.textContent = "Undo";
 
-// Add an event listener to the undo button
+// Undo button event listener
 undoButton.addEventListener("click", () => {
-  if (paths.length > 0) {
-    const lastPath = paths.pop(); // Remove the last drawing path
-    if (lastPath) redoStack.push(lastPath); // Add it to the redo stack if not null
-    // Dispatch a custom event 'drawing-changed' to update the canvas
-    const event = new CustomEvent('drawing-changed');
-    canvas.dispatchEvent(event);
-  }
-});
+    if (paths.length > 0) {
+      const lastPath = paths.pop(); // Remove the last drawing path
+      if (lastPath) {
+        redoStack.push(lastPath); // Add it to the redo stack if not null
+      }
+      // Dispatch a custom event 'drawing-changed' to update the canvas
+      const event = new CustomEvent('drawing-changed');
+      canvas.dispatchEvent(event);
+    }
+  });
 
 // Append the undo button to the app
 app.appendChild(undoButton);
