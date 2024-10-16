@@ -27,7 +27,6 @@ canvas.height = 256;
 // Append the canvas to the app
 app.appendChild(canvas);
 
-
 //-------------------------Drawing with mouse -------------------------
 
 // Get the 2D drawing context
@@ -35,25 +34,53 @@ const context = canvas.getContext("2d")!;
 
 // Drawing state
 let isDrawing = false;
+const paths: Array<Array<{x: number, y: number}>> = [];
+let currentPath: Array<{x: number, y: number}> = [];
 
 // Function to start drawing
 const startDrawing = (event: MouseEvent) => {
   isDrawing = true;
-  context.beginPath();
-  context.moveTo(event.offsetX, event.offsetY);
+  currentPath = [];
+  paths.push(currentPath);
+  addPoint(event.clientX, event.clientY);
 };
 
 // Function to draw
 const draw = (event: MouseEvent) => {
   if (!isDrawing) return;
-  context.lineTo(event.offsetX, event.offsetY);
+  addPoint(event.clientX, event.clientY);
+  redrawCanvas();
+};
+
+// Add a point to the current path
+const addPoint = (x: number, y: number) => {
+  const rect = canvas.getBoundingClientRect();
+  const point = { x: x - rect.left, y: y - rect.top };
+  currentPath.push(point);
+
+  // Dispatch a custom event 'drawing-changed'
+  const event = new CustomEvent('drawing-changed', { detail: { point: point } });
+  canvas.dispatchEvent(event);
+};
+
+// Function to redraw canvas
+const redrawCanvas = () => {
+  context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+  context.beginPath();
+
+  paths.forEach(path => {
+    if (path.length === 0) return;
+    context.moveTo(path[0].x, path[0].y);
+    path.forEach(point => context.lineTo(point.x, point.y));
+  });
+
   context.stroke();
+  context.closePath();
 };
 
 // Function to stop drawing
 const stopDrawing = () => {
   isDrawing = false;
-  context.closePath();
 };
 
 // Add event listeners to the canvas
@@ -70,8 +97,14 @@ clearButton.textContent = "Clear";
 
 // Add an event listener to the clear button
 clearButton.addEventListener("click", () => {
-  context.clearRect(0, 0, canvas.width, canvas.height);
+  paths.length = 0; // Clear all paths
+  redrawCanvas(); // Redraw canvas to reflect clearing
 });
 
 // Append the clear button to the app
 app.appendChild(clearButton);
+
+// Optional: Add a listener for the 'drawing-changed' events
+canvas.addEventListener('drawing-changed', (event) => {
+  console.log('Changed:', event);
+});
