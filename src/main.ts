@@ -48,7 +48,7 @@ const startDrawing = (event: MouseEvent) => {
 // Function to draw
 const draw = (event: MouseEvent) => {
   if (!isDrawing) return;
-  addPoint(event.clientX, event.clientY); // Add point and dispatch event
+  addPoint(event.clientX, event.clientY);
 };
 
 // Add a point to the current path
@@ -107,3 +107,22 @@ clearButton.addEventListener("click", () => {
 
 // Append the clear button to the app
 app.appendChild(clearButton);
+
+//-------------------------Undo button-------------------------
+
+// Create an undo button
+const undoButton = document.createElement("button");
+undoButton.textContent = "Undo";
+
+// Add an event listener to the undo button
+undoButton.addEventListener("click", () => {
+  if (paths.length > 0) {
+    paths.pop(); // Remove the last drawing path
+    // Dispatch a custom event 'drawing-changed' to update the canvas
+    const event = new CustomEvent('drawing-changed');
+    canvas.dispatchEvent(event);
+  }
+});
+
+// Append the undo button to the app
+app.appendChild(undoButton);
