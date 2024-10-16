@@ -48,8 +48,7 @@ const startDrawing = (event: MouseEvent) => {
 // Function to draw
 const draw = (event: MouseEvent) => {
   if (!isDrawing) return;
-  addPoint(event.clientX, event.clientY);
-  redrawCanvas();
+  addPoint(event.clientX, event.clientY); // Add point and dispatch event
 };
 
 // Add a point to the current path
@@ -62,6 +61,11 @@ const addPoint = (x: number, y: number) => {
   const event = new CustomEvent('drawing-changed', { detail: { point: point } });
   canvas.dispatchEvent(event);
 };
+
+// Observer for 'drawing-changed' events to redraw the canvas
+canvas.addEventListener('drawing-changed', () => {
+  redrawCanvas();
+});
 
 // Function to redraw canvas
 const redrawCanvas = () => {
@@ -103,8 +107,3 @@ clearButton.addEventListener("click", () => {
 
 // Append the clear button to the app
 app.appendChild(clearButton);
-
-// Optional: Add a listener for the 'drawing-changed' events
-canvas.addEventListener('drawing-changed', (event) => {
-  console.log('Changed:', event);
-});
