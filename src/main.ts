@@ -35,6 +35,7 @@ const context = canvas.getContext("2d")!;
 // Drawing state
 let isDrawing = false;
 const paths: Array<Array<{x: number, y: number}>> = [];
+const redoStack: Array<Array<{x: number, y: number}>> = []; // Stack for redo functionality
 let currentPath: Array<{x: number, y: number}> = [];
 
 // Function to start drawing
@@ -43,6 +44,7 @@ const startDrawing = (event: MouseEvent) => {
   currentPath = [];
   paths.push(currentPath);
   addPoint(event.clientX, event.clientY);
+  redoStack.length = 0; // Clear the redo stack on new draw action
 };
 
 // Function to draw
@@ -102,6 +104,7 @@ clearButton.textContent = "Clear";
 // Add an event listener to the clear button
 clearButton.addEventListener("click", () => {
   paths.length = 0; // Clear all paths
+  redoStack.length = 0; // Clear redo stack
   redrawCanvas(); // Redraw canvas to reflect clearing
 });
 
@@ -117,7 +120,8 @@ undoButton.textContent = "Undo";
 // Add an event listener to the undo button
 undoButton.addEventListener("click", () => {
   if (paths.length > 0) {
-    paths.pop(); // Remove the last drawing path
+    const lastPath = paths.pop(); // Remove the last drawing path
+    if (lastPath) redoStack.push(lastPath); // Add it to the redo stack if not null
     // Dispatch a custom event 'drawing-changed' to update the canvas
     const event = new CustomEvent('drawing-changed');
     canvas.dispatchEvent(event);
@@ -126,3 +130,23 @@ undoButton.addEventListener("click", () => {
 
 // Append the undo button to the app
 app.appendChild(undoButton);
+
+//-------------------------Redo button-------------------------
+
+// Create a redo button
+const redoButton = document.createElement("button");
+redoButton.textContent = "Redo";
+
+// Add an event listener to the redo button
+redoButton.addEventListener("click", () => {
+  if (redoStack.length > 0) {
+    const pathToRedo = redoStack.pop(); // Restore the last undone path
+    if (pathToRedo) paths.push(pathToRedo); // Add it back to paths
+    // Dispatch a custom event 'drawing-changed' to update the canvas
+    const event = new CustomEvent('drawing-changed');
+    canvas.dispatchEvent(event);
+  }
+});
+
+// Append the redo button to the app
+app.appendChild(redoButton);
