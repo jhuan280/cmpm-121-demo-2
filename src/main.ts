@@ -10,7 +10,7 @@ class Point {
 
 // Define a Path class
 class Path {
-  private points: Point[];
+  protected points: Point[];  
 
   constructor() {
     this.points = [];
@@ -23,10 +23,24 @@ class Path {
   display(ctx: CanvasRenderingContext2D) {
     if (this.points.length === 0) return;
 
+    ctx.beginPath();
     ctx.moveTo(this.points[0].x, this.points[0].y);
     this.points.forEach(point => {
       ctx.lineTo(point.x, point.y);
     });
+    ctx.stroke();
+  }
+}
+
+// Define a MarkerLine class that extends Path
+class MarkerLine extends Path {
+  constructor(initialX: number, initialY: number) {
+    super();
+    this.addPoint(initialX, initialY);
+  }
+
+  drag(x: number, y: number) {
+    this.addPoint(x, y);
   }
 }
 
@@ -53,51 +67,34 @@ const context = canvas.getContext("2d")!;
 let isDrawing = false;
 const paths: Array<Path> = [];
 const redoStack: Array<Path> = [];
-let currentPath: Path | null = null;
+let currentPath: MarkerLine | null = null;  // Change the type to MarkerLine
 
 const startDrawing = (event: MouseEvent) => {
   isDrawing = true;
-  currentPath = new Path();
+  const rect = canvas.getBoundingClientRect();
+  currentPath = new MarkerLine(event.clientX - rect.left, event.clientY - rect.top);
   paths.push(currentPath);
-  addPoint(event.clientX, event.clientY);
-  redoStack.length = 0; // Clear the redo stack on new draw action
+  redoStack.length = 0; 
 };
 
 const draw = (event: MouseEvent) => {
-  if (isDrawing) {
-    addPoint(event.clientX, event.clientY);
+  if (isDrawing && currentPath) {
+    const rect = canvas.getBoundingClientRect();
+    currentPath.drag(event.clientX - rect.left, event.clientY - rect.top);
+    redrawCanvas();
   }
-};
-
-const addPoint = (x: number, y: number) => {
-  const rect = canvas.getBoundingClientRect();
-  currentPath?.addPoint(x - rect.left, y - rect.top);
-
-  // Dispatch a custom event 'drawing-changed'
-  const event = new CustomEvent('drawing-changed');
-  canvas.dispatchEvent(event);
-};
-
-// Observer for 'drawing-changed' events to redraw the canvas
-canvas.addEventListener('drawing-changed', () => {
-  redrawCanvas();
-});
-
-// Function to redraw canvas
-const redrawCanvas = () => {
-  context.clearRect(0, 0, canvas.width, canvas.height);
-  context.beginPath();
-
-  paths.forEach(path => path.display(context));
-
-  context.stroke();
-  context.closePath();
 };
 
 const stopDrawing = () => {
   isDrawing = false;
 };
 
+const redrawCanvas = () => {
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  paths.forEach(path => path.display(context));
+};
+
+// Add event listeners to the canvas
 canvas.addEventListener("mousedown", startDrawing);
 canvas.addEventListener("mousemove", draw);
 canvas.addEventListener("mouseup", stopDrawing);
@@ -123,8 +120,7 @@ undoButton.addEventListener("click", () => {
   if (paths.length > 0) {
     const lastPath = paths.pop();
     if (lastPath) redoStack.push(lastPath);
-    const event = new CustomEvent('drawing-changed');
-    canvas.dispatchEvent(event);
+    redrawCanvas();
   }
 });
 buttonContainer.appendChild(undoButton);
@@ -135,8 +131,7 @@ redoButton.addEventListener("click", () => {
   if (redoStack.length > 0) {
     const pathToRedo = redoStack.pop();
     if (pathToRedo) paths.push(pathToRedo);
-    const event = new CustomEvent('drawing-changed');
-    canvas.dispatchEvent(event);
+    redrawCanvas();
   }
 });
 buttonContainer.appendChild(redoButton);
