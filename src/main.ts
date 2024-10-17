@@ -3,68 +3,78 @@ import "./style.css";
 const APP_NAME = "Jackie's Art Canvas";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 
+// Define a Point class
+class Point {
+  constructor(public x: number, public y: number) {}
+}
+
+// Define a Path class
+class Path {
+  private points: Point[];
+
+  constructor() {
+    this.points = [];
+  }
+
+  addPoint(x: number, y: number) {
+    this.points.push(new Point(x, y));
+  }
+
+  display(ctx: CanvasRenderingContext2D) {
+    if (this.points.length === 0) return;
+
+    ctx.moveTo(this.points[0].x, this.points[0].y);
+    this.points.forEach(point => {
+      ctx.lineTo(point.x, point.y);
+    });
+  }
+}
+
 //-------------------------Title-------------------------
 
-// Create an h1 element for the title
 const title = document.createElement("h1");
 title.textContent = APP_NAME;
-
-// Append the h1 element to the app
 app.appendChild(title);
-
-// Update the document title
 document.title = APP_NAME;
 
 //-------------------------Canvas-------------------------
 
-// Create a container for the canvas and buttons
 const container = document.createElement("div");
 container.className = "canvas-container";
 
-// Create a canvas element
 const canvas = document.createElement("canvas");
-
-// Set the size of the canvas
 canvas.width = 256;
 canvas.height = 256;
-
-// Append the canvas to the container
 container.appendChild(canvas);
 
 //-------------------------Drawing with mouse -------------------------
 
-// Get the 2D drawing context
 const context = canvas.getContext("2d")!;
-
-// Drawing state
 let isDrawing = false;
-const paths: Array<Array<{x: number, y: number}>> = [];
-const redoStack: Array<Array<{x: number, y: number}>> = []; // Stack for redo functionality
-let currentPath: Array<{x: number, y: number}> = [];
+const paths: Array<Path> = [];
+const redoStack: Array<Path> = [];
+let currentPath: Path | null = null;
 
-// Function to start drawing
 const startDrawing = (event: MouseEvent) => {
   isDrawing = true;
-  currentPath = [];
+  currentPath = new Path();
   paths.push(currentPath);
   addPoint(event.clientX, event.clientY);
   redoStack.length = 0; // Clear the redo stack on new draw action
 };
 
-// Function to draw
 const draw = (event: MouseEvent) => {
-  if (!isDrawing) return;
-  addPoint(event.clientX, event.clientY);
+  if (isDrawing) {
+    addPoint(event.clientX, event.clientY);
+  }
 };
 
-// Add a point to the current path
 const addPoint = (x: number, y: number) => {
   const rect = canvas.getBoundingClientRect();
-  const point = { x: x - rect.left, y: y - rect.top };
-  currentPath.push(point);
+  currentPath?.addPoint(x - rect.left, y - rect.top);
 
   // Dispatch a custom event 'drawing-changed'
-  const event = new CustomEvent('drawing-changed', { detail: { point: point } });
+  const event = new CustomEvent('drawing-changed');
   canvas.dispatchEvent(event);
 };
 
@@ -75,25 +85,19 @@ canvas.addEventListener('drawing-changed', () => {
 
 // Function to redraw canvas
 const redrawCanvas = () => {
-  context.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+  context.clearRect(0, 0, canvas.width, canvas.height);
   context.beginPath();
 
-  paths.forEach(path => {
-    if (path.length === 0) return;
-    context.moveTo(path[0].x, path[0].y);
-    path.forEach(point => context.lineTo(point.x, point.y));
-  });
+  paths.forEach(path => path.display(context));
 
   context.stroke();
   context.closePath();
 };
 
-// Function to stop drawing
 const stopDrawing = () => {
   isDrawing = false;
 };
 
-// Add event listeners to the canvas
 canvas.addEventListener("mousedown", startDrawing);
 canvas.addEventListener("mousemove", draw);
 canvas.addEventListener("mouseup", stopDrawing);
@@ -101,64 +105,41 @@ canvas.addEventListener("mouseout", stopDrawing);
 
 //-------------------------Buttons-------------------------
 
-// Create a button container
 const buttonContainer = document.createElement("div");
 buttonContainer.className = "button-container";
 
-// Create a clear button
 const clearButton = document.createElement("button");
 clearButton.textContent = "Clear";
-
-// Add an event listener to the clear button
 clearButton.addEventListener("click", () => {
-  paths.length = 0; // Clear all paths
-  redoStack.length = 0; // Clear redo stack
-  redrawCanvas(); // Redraw canvas to reflect clearing
+  paths.length = 0;
+  redoStack.length = 0;
+  redrawCanvas();
 });
-
-// Append the clear button to the button container
 buttonContainer.appendChild(clearButton);
 
-// Create an undo button
 const undoButton = document.createElement("button");
 undoButton.textContent = "Undo";
-
-// Undo button event listener
 undoButton.addEventListener("click", () => {
   if (paths.length > 0) {
-    const lastPath = paths.pop(); // Remove the last drawing path
-    if (lastPath) {
-      redoStack.push(lastPath); // Add it to the redo stack if not null
-    }
-    // Dispatch a custom event 'drawing-changed' to update the canvas
+    const lastPath = paths.pop();
+    if (lastPath) redoStack.push(lastPath);
     const event = new CustomEvent('drawing-changed');
     canvas.dispatchEvent(event);
   }
 });
-
-// Append the undo button to the button container
 buttonContainer.appendChild(undoButton);
 
-// Create a redo button
 const redoButton = document.createElement("button");
 redoButton.textContent = "Redo";
-
-// Add an event listener to the redo button
 redoButton.addEventListener("click", () => {
   if (redoStack.length > 0) {
-    const pathToRedo = redoStack.pop(); // Restore the last undone path
-    if (pathToRedo) paths.push(pathToRedo); // Add it back to paths
-    // Dispatch a custom event 'drawing-changed' to update the canvas
+    const pathToRedo = redoStack.pop();
+    if (pathToRedo) paths.push(pathToRedo);
     const event = new CustomEvent('drawing-changed');
     canvas.dispatchEvent(event);
   }
 });
-
-// Append the redo button to the button container
 buttonContainer.appendChild(redoButton);
 
-// Append the button container to the main container
 container.appendChild(buttonContainer);
-
-// Append the main container to the app
 app.appendChild(container);
