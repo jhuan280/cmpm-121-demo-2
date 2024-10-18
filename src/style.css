@@ -96,7 +96,6 @@ button:focus-visible {
 
 /* ------------------- Canvas ------------------------ */
 
-
 canvas {
   border: 1px solid #000; /* Thin black border */
   border-radius: 8px; /* Rounded corners */
@@ -119,4 +118,10 @@ button.selectedTool {
   background-color: #4CAF50; /* Green */
   color: white; /* White text color */
   border: 2px solid #45A049; /* Darker border */
+}
+
+/* ------------------- Cursor ------------------------ */
+
+canvas.hide-cursor {
+  cursor: none; /* Hide the default mouse cursor */
 }

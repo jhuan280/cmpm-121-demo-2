@@ -84,6 +84,7 @@ const container = document.createElement("div");
 container.className = "canvas-container";
 
 const canvas = document.createElement("canvas");
+canvas.classList.add('hide-cursor');
 canvas.width = 256;
 canvas.height = 256;
 container.appendChild(canvas);
@@ -197,6 +198,7 @@ thinMarkerButton.addEventListener("click", () => {
   currentLineWidth = 1; // Set line width for thin marker
   toolPreview.setLineWidth(currentLineWidth); // Update tool preview
   updateSelectedTool(thinMarkerButton); // Update UI feedback
+  redrawCanvas(); // Redraw to reflect tool switch immediately
 });
 buttonContainer.appendChild(thinMarkerButton);
 
@@ -207,6 +209,7 @@ thickMarkerButton.addEventListener("click", () => {
   currentLineWidth = 5; // Set line width for thick marker
   toolPreview.setLineWidth(currentLineWidth); // Update tool preview
   updateSelectedTool(thickMarkerButton); // Update UI feedback
+  redrawCanvas(); // Redraw to reflect tool switch immediately
 });
 buttonContainer.appendChild(thickMarkerButton);
 
