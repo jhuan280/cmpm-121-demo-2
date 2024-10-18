@@ -8,12 +8,14 @@ class Point {
   constructor(public x: number, public y: number) {}
 }
 
-// Define a Path class
+// Define a Path class with an initial line width
 class Path {
   protected points: Point[];  
+  protected lineWidth: number;
 
-  constructor() {
+  constructor(lineWidth: number) {
     this.points = [];
+    this.lineWidth = lineWidth;
   }
 
   addPoint(x: number, y: number) {
@@ -23,6 +25,7 @@ class Path {
   display(ctx: CanvasRenderingContext2D) {
     if (this.points.length === 0) return;
 
+    ctx.lineWidth = this.lineWidth;  // Set line width
     ctx.beginPath();
     ctx.moveTo(this.points[0].x, this.points[0].y);
     this.points.forEach(point => {
@@ -34,8 +37,8 @@ class Path {
 
 // Define a MarkerLine class that extends Path
 class MarkerLine extends Path {
-  constructor(initialX: number, initialY: number) {
-    super();
+  constructor(initialX: number, initialY: number, lineWidth: number) {
+    super(lineWidth);
     this.addPoint(initialX, initialY);
   }
 
@@ -65,14 +68,15 @@ container.appendChild(canvas);
 
 const context = canvas.getContext("2d")!;
 let isDrawing = false;
+let currentLineWidth = 1;  // State variable for line width
 const paths: Array<Path> = [];
 const redoStack: Array<Path> = [];
-let currentPath: MarkerLine | null = null;  // Change the type to MarkerLine
+let currentPath: MarkerLine | null = null;
 
 const startDrawing = (event: MouseEvent) => {
   isDrawing = true;
   const rect = canvas.getBoundingClientRect();
-  currentPath = new MarkerLine(event.clientX - rect.left, event.clientY - rect.top);
+  currentPath = new MarkerLine(event.clientX - rect.left, event.clientY - rect.top, currentLineWidth);
   paths.push(currentPath);
   redoStack.length = 0; 
 };
@@ -105,6 +109,7 @@ canvas.addEventListener("mouseout", stopDrawing);
 const buttonContainer = document.createElement("div");
 buttonContainer.className = "button-container";
 
+// Clear button
 const clearButton = document.createElement("button");
 clearButton.textContent = "Clear";
 clearButton.addEventListener("click", () => {
@@ -114,6 +119,7 @@ clearButton.addEventListener("click", () => {
 });
 buttonContainer.appendChild(clearButton);
 
+// Undo button
 const undoButton = document.createElement("button");
 undoButton.textContent = "Undo";
 undoButton.addEventListener("click", () => {
@@ -125,6 +131,7 @@ undoButton.addEventListener("click", () => {
 });
 buttonContainer.appendChild(undoButton);
 
+// Redo button
 const redoButton = document.createElement("button");
 redoButton.textContent = "Redo";
 redoButton.addEventListener("click", () => {
@@ -135,6 +142,22 @@ redoButton.addEventListener("click", () => {
   }
 });
 buttonContainer.appendChild(redoButton);
+
+// Thin marker button
+const thinMarkerButton = document.createElement("button");
+thinMarkerButton.textContent = "Thin Marker";
+thinMarkerButton.addEventListener("click", () => {
+  currentLineWidth = 1;   // Set line width for thin marker
+});
+buttonContainer.appendChild(thinMarkerButton);
+
+// Thick marker button
+const thickMarkerButton = document.createElement("button");
+thickMarkerButton.textContent = "Thick Marker";
+thickMarkerButton.addEventListener("click", () => {
+  currentLineWidth = 5;   // Set line width for thick marker
+});
+buttonContainer.appendChild(thickMarkerButton);
 
 container.appendChild(buttonContainer);
 app.appendChild(container);
