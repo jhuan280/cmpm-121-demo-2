@@ -10,7 +10,7 @@ class Point {
 
 // Define a Path class with an initial line width
 class Path {
-  protected points: Point[];  
+  protected points: Point[];
   protected lineWidth: number;
 
   constructor(lineWidth: number) {
@@ -25,7 +25,7 @@ class Path {
   display(ctx: CanvasRenderingContext2D) {
     if (this.points.length === 0) return;
 
-    ctx.lineWidth = this.lineWidth;  // Set line width
+    ctx.lineWidth = this.lineWidth; // Set line width
     ctx.beginPath();
     ctx.moveTo(this.points[0].x, this.points[0].y);
     this.points.forEach(point => {
@@ -68,7 +68,7 @@ container.appendChild(canvas);
 
 const context = canvas.getContext("2d")!;
 let isDrawing = false;
-let currentLineWidth = 1;  // State variable for line width
+let currentLineWidth = 1; // State variable for line width
 const paths: Array<Path> = [];
 const redoStack: Array<Path> = [];
 let currentPath: MarkerLine | null = null;
@@ -78,7 +78,7 @@ const startDrawing = (event: MouseEvent) => {
   const rect = canvas.getBoundingClientRect();
   currentPath = new MarkerLine(event.clientX - rect.left, event.clientY - rect.top, currentLineWidth);
   paths.push(currentPath);
-  redoStack.length = 0; 
+  redoStack.length = 0;
 };
 
 const draw = (event: MouseEvent) => {
@@ -108,6 +108,13 @@ canvas.addEventListener("mouseout", stopDrawing);
 
 const buttonContainer = document.createElement("div");
 buttonContainer.className = "button-container";
+
+// Function to update button styles
+const updateSelectedTool = (selectedButton: HTMLButtonElement) => {
+  const buttons = buttonContainer.querySelectorAll("button");
+  buttons.forEach(button => button.classList.remove("selectedTool"));
+  selectedButton.classList.add("selectedTool");
+};
 
 // Clear button
 const clearButton = document.createElement("button");
@@ -147,7 +154,8 @@ buttonContainer.appendChild(redoButton);
 const thinMarkerButton = document.createElement("button");
 thinMarkerButton.textContent = "Thin Marker";
 thinMarkerButton.addEventListener("click", () => {
-  currentLineWidth = 1;   // Set line width for thin marker
+  currentLineWidth = 1; // Set line width for thin marker
+  updateSelectedTool(thinMarkerButton); // Update UI feedback
 });
 buttonContainer.appendChild(thinMarkerButton);
 
@@ -155,9 +163,13 @@ buttonContainer.appendChild(thinMarkerButton);
 const thickMarkerButton = document.createElement("button");
 thickMarkerButton.textContent = "Thick Marker";
 thickMarkerButton.addEventListener("click", () => {
-  currentLineWidth = 5;   // Set line width for thick marker
+  currentLineWidth = 5; // Set line width for thick marker
+  updateSelectedTool(thickMarkerButton); // Update UI feedback
 });
 buttonContainer.appendChild(thickMarkerButton);
+
+// Initially set the thin marker as selected
+updateSelectedTool(thinMarkerButton);
 
 container.appendChild(buttonContainer);
 app.appendChild(container);
