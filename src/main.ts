@@ -40,6 +40,24 @@ class MarkerLine {
   }
 }
 
+// Define a StickerPath class for handling stickers
+class StickerPath {
+  private x: number;
+  private y: number;
+  private sticker: string;
+
+  constructor(x: number, y: number, sticker: string) {
+    this.x = x;
+    this.y = y;
+    this.sticker = sticker;
+  }
+
+  display(ctx: CanvasRenderingContext2D) {
+    ctx.font = "30px Arial";
+    ctx.fillText(this.sticker, this.x, this.y);
+  }
+}
+
 // Define a ToolPreview class
 class ToolPreview {
   private x: number;
@@ -71,6 +89,33 @@ class ToolPreview {
   }
 }
 
+// Define a StickerPreview class
+class StickerPreview {
+  private x: number = 0;
+  private y: number = 0;
+  private sticker: string = "";
+
+  constructor(sticker: string) {
+    this.sticker = sticker;
+  }
+
+  update(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+
+  setSticker(sticker: string) {
+    this.sticker = sticker;
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    if (this.sticker) {
+      ctx.font = "30px Arial";
+      ctx.fillText(this.sticker, this.x, this.y);
+    }
+  }
+}
+
 //-------------------------Title-------------------------
 
 const title = document.createElement("h1");
@@ -94,19 +139,30 @@ container.appendChild(canvas);
 const context = canvas.getContext("2d")!;
 let isDrawing = false;
 let currentLineWidth = 1; // State variable for line width
-const paths: Array<MarkerLine> = [];
-const redoStack: Array<MarkerLine> = [];
+const paths: Array<MarkerLine | StickerPath> = [];
+const redoStack: Array<MarkerLine | StickerPath> = [];
 let currentPath: MarkerLine | null = null;
-let toolPreview: ToolPreview = new ToolPreview(currentLineWidth);
+let toolPreview: ToolPreview | null = new ToolPreview(currentLineWidth);
+let stickerPreview: StickerPreview | null = null;
+let activeSticker: string | null = null; // Track the active sticker
 
 const startDrawing = (event: MouseEvent) => {
-  isDrawing = true;
   const rect = canvas.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
-  currentPath = new MarkerLine(x, y, currentLineWidth);
-  paths.push(currentPath);
-  redoStack.length = 0;
+
+  if (activeSticker) {
+    // Place sticker on the canvas
+    const stickerPath = new StickerPath(x, y, activeSticker);
+    paths.push(stickerPath);
+    activeSticker = null; // Reset the active sticker
+  } else {
+    isDrawing = true;
+    currentPath = new MarkerLine(x, y, currentLineWidth);
+    paths.push(currentPath);
+    redoStack.length = 0;
+  }
+  redrawCanvas();
 };
 
 const draw = (event: MouseEvent) => {
@@ -116,6 +172,10 @@ const draw = (event: MouseEvent) => {
 
   if (!isDrawing && toolPreview) {
     toolPreview.update(x, y);
+  }
+
+  if (!isDrawing && stickerPreview) {
+    stickerPreview.update(x, y);
   }
 
   if (isDrawing && currentPath) {
@@ -137,6 +197,11 @@ const redrawCanvas = () => {
   if (!isDrawing && toolPreview) {
     toolPreview.draw(context);
   }
+
+  // Draw sticker preview if available
+  if (!isDrawing && stickerPreview) {
+    stickerPreview.draw(context);
+  }
 };
 
 // Add event listeners to the canvas
@@ -150,11 +215,12 @@ canvas.addEventListener("mouseout", stopDrawing);
 const buttonContainer = document.createElement("div");
 buttonContainer.className = "button-container";
 
-// Function to update button styles
+// Function to update button styles and cursor visibility
 const updateSelectedTool = (selectedButton: HTMLButtonElement) => {
   const buttons = buttonContainer.querySelectorAll("button");
   buttons.forEach(button => button.classList.remove("selectedTool"));
   selectedButton.classList.add("selectedTool");
+  canvas.classList.add("hide-cursor"); // Hide the cursor for tool use
 };
 
 // Clear button
@@ -196,7 +262,9 @@ const thinMarkerButton = document.createElement("button");
 thinMarkerButton.textContent = "Thin Marker";
 thinMarkerButton.addEventListener("click", () => {
   currentLineWidth = 1; // Set line width for thin marker
-  toolPreview.setLineWidth(currentLineWidth); // Update tool preview
+  toolPreview = new ToolPreview(currentLineWidth); // Update tool preview
+  stickerPreview = null; // Remove sticker preview
+  activeSticker = null; // No active sticker
   updateSelectedTool(thinMarkerButton); // Update UI feedback
   redrawCanvas(); // Redraw to reflect tool switch immediately
 });
@@ -207,11 +275,30 @@ const thickMarkerButton = document.createElement("button");
 thickMarkerButton.textContent = "Thick Marker";
 thickMarkerButton.addEventListener("click", () => {
   currentLineWidth = 5; // Set line width for thick marker
-  toolPreview.setLineWidth(currentLineWidth); // Update tool preview
+  toolPreview = new ToolPreview(currentLineWidth); // Update tool preview
+  stickerPreview = null; // Remove sticker preview
+  activeSticker = null; // No active sticker
   updateSelectedTool(thickMarkerButton); // Update UI feedback
   redrawCanvas(); // Redraw to reflect tool switch immediately
 });
 buttonContainer.appendChild(thickMarkerButton);
+
+// Sticker buttons
+const stickers = ["😀", "🎨", "🌟"];
+stickers.forEach(sticker => {
+  const stickerButton = document.createElement("button");
+  stickerButton.textContent = sticker;
+  stickerButton.addEventListener("click", () => {
+    stickerPreview = new StickerPreview(sticker); // Set sticker preview
+    toolPreview = null; // Remove tool preview
+    activeSticker = sticker; // Set as active sticker for placement
+    updateSelectedTool(stickerButton); // Update UI feedback
+    // Fire 'tool-moved' event to simulate a movement
+    const toolMovedEvent = new CustomEvent('tool-moved', { detail: { x: 0, y: 0 } });
+    canvas.dispatchEvent(toolMovedEvent);
+  });
+  buttonContainer.appendChild(stickerButton);
+});
 
 // Initially set the thin marker as selected
 updateSelectedTool(thinMarkerButton);
