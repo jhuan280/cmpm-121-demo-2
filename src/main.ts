@@ -53,7 +53,8 @@ class StickerPath {
   }
 
   display(ctx: CanvasRenderingContext2D) {
-    ctx.font = "30px Arial";
+    ctx.font = "30px Arial"; // Set font size and type without transparency
+    ctx.fillStyle = "#000"; // Ensure solid color for the sticker
     ctx.fillText(this.sticker, this.x, this.y);
   }
 }
@@ -110,8 +111,8 @@ class StickerPreview {
 
   draw(ctx: CanvasRenderingContext2D) {
     if (this.sticker) {
-      ctx.font = "30px Arial";
-      ctx.fillText(this.sticker, this.x, this.y);
+      ctx.font = "30px Arial"; // Set the font for preview
+      ctx.fillText(this.sticker, this.x, this.y); // Render with solid color
     }
   }
 }
@@ -293,9 +294,6 @@ stickers.forEach(sticker => {
     toolPreview = null; // Remove tool preview
     activeSticker = sticker; // Set as active sticker for placement
     updateSelectedTool(stickerButton); // Update UI feedback
-    // Fire 'tool-moved' event to simulate a movement
-    const toolMovedEvent = new CustomEvent('tool-moved', { detail: { x: 0, y: 0 } });
-    canvas.dispatchEvent(toolMovedEvent);
   });
   buttonContainer.appendChild(stickerButton);
 });
