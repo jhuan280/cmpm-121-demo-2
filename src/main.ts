@@ -40,6 +40,37 @@ class MarkerLine {
   }
 }
 
+// Define a ToolPreview class
+class ToolPreview {
+  private x: number;
+  private y: number;
+  private lineWidth: number;
+
+  constructor(lineWidth: number) {
+    this.x = 0;
+    this.y = 0;
+    this.lineWidth = lineWidth;
+  }
+
+  update(x: number, y: number) {
+    this.x = x;
+    this.y = y;
+  }
+
+  setLineWidth(lineWidth: number) {
+    this.lineWidth = lineWidth;
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.lineWidth / 2, 0, Math.PI * 2);
+    ctx.strokeStyle = "#888"; // Tool preview color
+    ctx.fillStyle = "rgba(136, 136, 136, 0.3)";
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
 //-------------------------Title-------------------------
 
 const title = document.createElement("h1");
@@ -65,24 +96,29 @@ let currentLineWidth = 1; // State variable for line width
 const paths: Array<MarkerLine> = [];
 const redoStack: Array<MarkerLine> = [];
 let currentPath: MarkerLine | null = null;
-let mouseX = 0;
-let mouseY = 0;
+let toolPreview: ToolPreview = new ToolPreview(currentLineWidth);
 
 const startDrawing = (event: MouseEvent) => {
   isDrawing = true;
   const rect = canvas.getBoundingClientRect();
-  currentPath = new MarkerLine(event.clientX - rect.left, event.clientY - rect.top, currentLineWidth);
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+  currentPath = new MarkerLine(x, y, currentLineWidth);
   paths.push(currentPath);
   redoStack.length = 0;
 };
 
 const draw = (event: MouseEvent) => {
   const rect = canvas.getBoundingClientRect();
-  mouseX = event.clientX - rect.left;
-  mouseY = event.clientY - rect.top;
+  const x = event.clientX - rect.left;
+  const y = event.clientY - rect.top;
+
+  if (!isDrawing && toolPreview) {
+    toolPreview.update(x, y);
+  }
 
   if (isDrawing && currentPath) {
-    currentPath.drag(mouseX, mouseY);
+    currentPath.drag(x, y);
   }
   
   redrawCanvas();
@@ -96,28 +132,17 @@ const redrawCanvas = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
   paths.forEach(path => path.display(context));
 
-  // Preview tool circle
-  context.beginPath();
-  context.arc(mouseX, mouseY, currentLineWidth / 2, 0, Math.PI * 2);
-  context.strokeStyle = "#888"; // Tool preview color
-  context.stroke();
+  // Draw tool preview if available
+  if (!isDrawing && toolPreview) {
+    toolPreview.draw(context);
+  }
 };
 
 // Add event listeners to the canvas
 canvas.addEventListener("mousedown", startDrawing);
 canvas.addEventListener("mousemove", draw);
-canvas.addEventListener("mousemove", (event: MouseEvent) => {
-  const toolMovedEvent = new CustomEvent('tool-moved', { detail: { x: event.clientX, y: event.clientY } });
-  canvas.dispatchEvent(toolMovedEvent);
-});
 canvas.addEventListener("mouseup", stopDrawing);
 canvas.addEventListener("mouseout", stopDrawing);
-
-// Listen for 'tool-moved' events to check their operation
-canvas.addEventListener("tool-moved", (event) => {
-  const customEvent = event as CustomEvent<{ x: number, y: number }>;
-  console.log("Tool moved to: ", customEvent.detail.x, customEvent.detail.y);
-});
 
 //-------------------------Buttons-------------------------
 
@@ -170,6 +195,7 @@ const thinMarkerButton = document.createElement("button");
 thinMarkerButton.textContent = "Thin Marker";
 thinMarkerButton.addEventListener("click", () => {
   currentLineWidth = 1; // Set line width for thin marker
+  toolPreview.setLineWidth(currentLineWidth); // Update tool preview
   updateSelectedTool(thinMarkerButton); // Update UI feedback
 });
 buttonContainer.appendChild(thinMarkerButton);
@@ -179,6 +205,7 @@ const thickMarkerButton = document.createElement("button");
 thickMarkerButton.textContent = "Thick Marker";
 thickMarkerButton.addEventListener("click", () => {
   currentLineWidth = 5; // Set line width for thick marker
+  toolPreview.setLineWidth(currentLineWidth); // Update tool preview
   updateSelectedTool(thickMarkerButton); // Update UI feedback
 });
 buttonContainer.appendChild(thickMarkerButton);
