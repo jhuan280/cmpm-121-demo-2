@@ -156,7 +156,6 @@ const startDrawing = (event: MouseEvent) => {
     // Place sticker on the canvas
     const stickerPath = new StickerPath(x, y, activeSticker);
     paths.push(stickerPath);
-    activeSticker = null; // Reset the active sticker
   } else {
     isDrawing = true;
     currentPath = new MarkerLine(x, y, currentLineWidth);
