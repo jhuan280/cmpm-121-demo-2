@@ -8,18 +8,23 @@ class Point {
   constructor(public x: number, public y: number) {}
 }
 
-// Define a Path class with an initial line width
-class Path {
-  protected points: Point[];
-  protected lineWidth: number;
+// Define a MarkerLine class that includes line styling
+class MarkerLine {
+  private points: Point[];
+  private lineWidth: number;
 
-  constructor(lineWidth: number) {
+  constructor(initialX: number, initialY: number, lineWidth: number) {
     this.points = [];
     this.lineWidth = lineWidth;
+    this.addPoint(initialX, initialY);
   }
 
   addPoint(x: number, y: number) {
     this.points.push(new Point(x, y));
+  }
+
+  drag(x: number, y: number) {
+    this.addPoint(x, y);
   }
 
   display(ctx: CanvasRenderingContext2D) {
@@ -32,18 +37,6 @@ class Path {
       ctx.lineTo(point.x, point.y);
     });
     ctx.stroke();
-  }
-}
-
-// Define a MarkerLine class that extends Path
-class MarkerLine extends Path {
-  constructor(initialX: number, initialY: number, lineWidth: number) {
-    super(lineWidth);
-    this.addPoint(initialX, initialY);
-  }
-
-  drag(x: number, y: number) {
-    this.addPoint(x, y);
   }
 }
 
@@ -69,8 +62,8 @@ container.appendChild(canvas);
 const context = canvas.getContext("2d")!;
 let isDrawing = false;
 let currentLineWidth = 1; // State variable for line width
-const paths: Array<Path> = [];
-const redoStack: Array<Path> = [];
+const paths: Array<MarkerLine> = [];
+const redoStack: Array<MarkerLine> = [];
 let currentPath: MarkerLine | null = null;
 
 const startDrawing = (event: MouseEvent) => {
