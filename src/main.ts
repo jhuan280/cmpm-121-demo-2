@@ -65,6 +65,8 @@ let currentLineWidth = 1; // State variable for line width
 const paths: Array<MarkerLine> = [];
 const redoStack: Array<MarkerLine> = [];
 let currentPath: MarkerLine | null = null;
+let mouseX = 0;
+let mouseY = 0;
 
 const startDrawing = (event: MouseEvent) => {
   isDrawing = true;
@@ -75,11 +77,15 @@ const startDrawing = (event: MouseEvent) => {
 };
 
 const draw = (event: MouseEvent) => {
+  const rect = canvas.getBoundingClientRect();
+  mouseX = event.clientX - rect.left;
+  mouseY = event.clientY - rect.top;
+
   if (isDrawing && currentPath) {
-    const rect = canvas.getBoundingClientRect();
-    currentPath.drag(event.clientX - rect.left, event.clientY - rect.top);
-    redrawCanvas();
+    currentPath.drag(mouseX, mouseY);
   }
+  
+  redrawCanvas();
 };
 
 const stopDrawing = () => {
@@ -89,13 +95,29 @@ const stopDrawing = () => {
 const redrawCanvas = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
   paths.forEach(path => path.display(context));
+
+  // Preview tool circle
+  context.beginPath();
+  context.arc(mouseX, mouseY, currentLineWidth / 2, 0, Math.PI * 2);
+  context.strokeStyle = "#888"; // Tool preview color
+  context.stroke();
 };
 
 // Add event listeners to the canvas
 canvas.addEventListener("mousedown", startDrawing);
 canvas.addEventListener("mousemove", draw);
+canvas.addEventListener("mousemove", (event: MouseEvent) => {
+  const toolMovedEvent = new CustomEvent('tool-moved', { detail: { x: event.clientX, y: event.clientY } });
+  canvas.dispatchEvent(toolMovedEvent);
+});
 canvas.addEventListener("mouseup", stopDrawing);
 canvas.addEventListener("mouseout", stopDrawing);
+
+// Listen for 'tool-moved' events to check their operation
+canvas.addEventListener("tool-moved", (event) => {
+  const customEvent = event as CustomEvent<{ x: number, y: number }>;
+  console.log("Tool moved to: ", customEvent.detail.x, customEvent.detail.y);
+});
 
 //-------------------------Buttons-------------------------
 
