@@ -1,13 +1,5 @@
 import "./style.css";
 
-// Map of words to emojis
-const emojiMap: { [key: string]: string } = {
-  chicken: "🐔",
-  cat: "🐱",
-  dog: "🐶",
-  rabbit: "🐰", // Changed "star" to "rabbit"
-};
-
 const APP_NAME = "Jackie's Art Canvas";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 let stickersData = [
@@ -294,15 +286,13 @@ regularButtonContainer.appendChild(thickMarkerButton);
 const customStickerButton = document.createElement("button");
 customStickerButton.textContent = "Custom Sticker";
 customStickerButton.addEventListener("click", () => {
-  let customSticker = prompt("Enter your custom word:");
+  let customSticker = prompt("Paste your emoji here:");
   if (customSticker) {
-    // Convert the custom sticker to an emoji if available
-    const emoji = emojiMap[customSticker] ?? customSticker; // Default to text if no emoji is found
-    stickersData.push({ emoji, label: `Custom: ${customSticker}` });
+    stickersData.push({ emoji: customSticker, label: `Custom: ${customSticker}` });
     createStickerButtons(); // Regenerate buttons including the new custom sticker
-    stickerPreview = new StickerPreview(emoji);
+    stickerPreview = new StickerPreview(customSticker);
     toolPreview = null;
-    activeSticker = emoji;
+    activeSticker = customSticker;
     updateSelectedTool(customStickerButton);
   }
 });
