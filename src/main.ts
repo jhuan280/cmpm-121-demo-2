@@ -2,6 +2,11 @@ import "./style.css";
 
 const APP_NAME = "Jackie's Art Canvas";
 const app = document.querySelector<HTMLDivElement>("#app")!;
+const stickersData = [
+  { emoji: "😀", label: "Smiley" },
+  { emoji: "🎨", label: "Palette" },
+  { emoji: "🌟", label: "Star" },
+];
 
 // Define a Point class
 class Point {
@@ -30,7 +35,7 @@ class MarkerLine {
   display(ctx: CanvasRenderingContext2D) {
     if (this.points.length === 0) return;
 
-    ctx.lineWidth = this.lineWidth; // Set line width
+    ctx.lineWidth = this.lineWidth;
     ctx.beginPath();
     ctx.moveTo(this.points[0].x, this.points[0].y);
     this.points.forEach(point => {
@@ -53,8 +58,8 @@ class StickerPath {
   }
 
   display(ctx: CanvasRenderingContext2D) {
-    ctx.font = "30px Arial"; // Set font size and type without transparency
-    ctx.fillStyle = "#000"; // Ensure solid color for the sticker
+    ctx.font = "30px Arial";
+    ctx.fillStyle = "#000";
     ctx.fillText(this.sticker, this.x, this.y);
   }
 }
@@ -83,7 +88,7 @@ class ToolPreview {
   draw(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.lineWidth / 2, 0, Math.PI * 2);
-    ctx.strokeStyle = "#888"; // Tool preview color
+    ctx.strokeStyle = "#888";
     ctx.fillStyle = "rgba(136, 136, 136, 0.3)";
     ctx.fill();
     ctx.stroke();
@@ -111,8 +116,8 @@ class StickerPreview {
 
   draw(ctx: CanvasRenderingContext2D) {
     if (this.sticker) {
-      ctx.font = "30px Arial"; // Set the font for preview
-      ctx.fillText(this.sticker, this.x, this.y); // Render with solid color
+      ctx.font = "30px Arial";
+      ctx.fillText(this.sticker, this.x, this.y);
     }
   }
 }
@@ -130,7 +135,7 @@ const container = document.createElement("div");
 container.className = "canvas-container";
 
 const canvas = document.createElement("canvas");
-canvas.classList.add('hide-cursor');
+canvas.classList.add("hide-cursor");
 canvas.width = 256;
 canvas.height = 256;
 container.appendChild(canvas);
@@ -139,13 +144,13 @@ container.appendChild(canvas);
 
 const context = canvas.getContext("2d")!;
 let isDrawing = false;
-let currentLineWidth = 1; // State variable for line width
+let currentLineWidth = 1;
 const paths: Array<MarkerLine | StickerPath> = [];
 const redoStack: Array<MarkerLine | StickerPath> = [];
 let currentPath: MarkerLine | null = null;
 let toolPreview: ToolPreview | null = new ToolPreview(currentLineWidth);
 let stickerPreview: StickerPreview | null = null;
-let activeSticker: string | null = null; // Track the active sticker
+let activeSticker: string | null = null;
 
 const startDrawing = (event: MouseEvent) => {
   const rect = canvas.getBoundingClientRect();
@@ -153,7 +158,6 @@ const startDrawing = (event: MouseEvent) => {
   const y = event.clientY - rect.top;
 
   if (activeSticker) {
-    // Place sticker on the canvas
     const stickerPath = new StickerPath(x, y, activeSticker);
     paths.push(stickerPath);
   } else {
@@ -181,7 +185,7 @@ const draw = (event: MouseEvent) => {
   if (isDrawing && currentPath) {
     currentPath.drag(x, y);
   }
-  
+
   redrawCanvas();
 };
 
@@ -193,12 +197,10 @@ const redrawCanvas = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
   paths.forEach(path => path.display(context));
 
-  // Draw tool preview if available
   if (!isDrawing && toolPreview) {
     toolPreview.draw(context);
   }
 
-  // Draw sticker preview if available
   if (!isDrawing && stickerPreview) {
     stickerPreview.draw(context);
   }
@@ -220,7 +222,7 @@ const updateSelectedTool = (selectedButton: HTMLButtonElement) => {
   const buttons = buttonContainer.querySelectorAll("button");
   buttons.forEach(button => button.classList.remove("selectedTool"));
   selectedButton.classList.add("selectedTool");
-  canvas.classList.add("hide-cursor"); // Hide the cursor for tool use
+  canvas.classList.add("hide-cursor");
 };
 
 // Clear button
@@ -261,12 +263,12 @@ buttonContainer.appendChild(redoButton);
 const thinMarkerButton = document.createElement("button");
 thinMarkerButton.textContent = "Thin Marker";
 thinMarkerButton.addEventListener("click", () => {
-  currentLineWidth = 1; // Set line width for thin marker
-  toolPreview = new ToolPreview(currentLineWidth); // Update tool preview
-  stickerPreview = null; // Remove sticker preview
-  activeSticker = null; // No active sticker
-  updateSelectedTool(thinMarkerButton); // Update UI feedback
-  redrawCanvas(); // Redraw to reflect tool switch immediately
+  currentLineWidth = 1;
+  toolPreview = new ToolPreview(currentLineWidth);
+  stickerPreview = null;
+  activeSticker = null;
+  updateSelectedTool(thinMarkerButton);
+  redrawCanvas();
 });
 buttonContainer.appendChild(thinMarkerButton);
 
@@ -274,25 +276,25 @@ buttonContainer.appendChild(thinMarkerButton);
 const thickMarkerButton = document.createElement("button");
 thickMarkerButton.textContent = "Thick Marker";
 thickMarkerButton.addEventListener("click", () => {
-  currentLineWidth = 5; // Set line width for thick marker
-  toolPreview = new ToolPreview(currentLineWidth); // Update tool preview
-  stickerPreview = null; // Remove sticker preview
-  activeSticker = null; // No active sticker
-  updateSelectedTool(thickMarkerButton); // Update UI feedback
-  redrawCanvas(); // Redraw to reflect tool switch immediately
+  currentLineWidth = 5;
+  toolPreview = new ToolPreview(currentLineWidth);
+  stickerPreview = null;
+  activeSticker = null;
+  updateSelectedTool(thickMarkerButton);
+  redrawCanvas();
 });
 buttonContainer.appendChild(thickMarkerButton);
 
-// Sticker buttons
-const stickers = ["😀", "🎨", "🌟"];
-stickers.forEach(sticker => {
+// Dynamic sticker buttons
+stickersData.forEach(({ emoji, label }) => {
   const stickerButton = document.createElement("button");
-  stickerButton.textContent = sticker;
+  stickerButton.textContent = emoji;
+  stickerButton.setAttribute("aria-label", label);
   stickerButton.addEventListener("click", () => {
-    stickerPreview = new StickerPreview(sticker); // Set sticker preview
-    toolPreview = null; // Remove tool preview
-    activeSticker = sticker; // Set as active sticker for placement
-    updateSelectedTool(stickerButton); // Update UI feedback
+    stickerPreview = new StickerPreview(emoji);
+    toolPreview = null;
+    activeSticker = emoji;
+    updateSelectedTool(stickerButton);
   });
   buttonContainer.appendChild(stickerButton);
 });
