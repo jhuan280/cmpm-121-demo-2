@@ -46,7 +46,7 @@ class MarkerLine {
     ctx.lineWidth = this.lineWidth;
     ctx.beginPath();
     ctx.moveTo(this.points[0].x, this.points[0].y);
-    this.points.forEach(point => {
+    this.points.forEach((point) => {
       ctx.lineTo(point.x, point.y);
     });
     ctx.stroke();
@@ -200,7 +200,7 @@ const stopDrawing = () => {
 
 const redrawCanvas = () => {
   context.clearRect(0, 0, canvas.width, canvas.height);
-  paths.forEach(path => path.display(context));
+  paths.forEach((path) => path.display(context));
 
   if (!isDrawing && toolPreview) {
     toolPreview.draw(context);
@@ -222,13 +222,13 @@ canvas.addEventListener("mouseout", stopDrawing);
 const buttonContainer = document.createElement("div");
 buttonContainer.className = "button-container";
 
-// Function to update button styles and cursor visibility
-const updateSelectedTool = (selectedButton: HTMLButtonElement) => {
-  const buttons = buttonContainer.querySelectorAll("button");
-  buttons.forEach(button => button.classList.remove("selectedTool"));
-  selectedButton.classList.add("selectedTool");
-  canvas.classList.add("hide-cursor");
-};
+const regularButtonContainer = document.createElement("div");
+regularButtonContainer.className = "regular-button-container";
+
+const stickerButtonContainer = document.createElement("div");
+stickerButtonContainer.className = "sticker-button-container";
+
+// Add all buttons to their respective containers
 
 // Clear button
 const clearButton = document.createElement("button");
@@ -238,7 +238,7 @@ clearButton.addEventListener("click", () => {
   redoStack.length = 0;
   redrawCanvas();
 });
-buttonContainer.appendChild(clearButton);
+regularButtonContainer.appendChild(clearButton);
 
 // Undo button
 const undoButton = document.createElement("button");
@@ -250,7 +250,7 @@ undoButton.addEventListener("click", () => {
     redrawCanvas();
   }
 });
-buttonContainer.appendChild(undoButton);
+regularButtonContainer.appendChild(undoButton);
 
 // Redo button
 const redoButton = document.createElement("button");
@@ -262,7 +262,7 @@ redoButton.addEventListener("click", () => {
     redrawCanvas();
   }
 });
-buttonContainer.appendChild(redoButton);
+regularButtonContainer.appendChild(redoButton);
 
 // Thin marker button
 const thinMarkerButton = document.createElement("button");
@@ -275,7 +275,7 @@ thinMarkerButton.addEventListener("click", () => {
   updateSelectedTool(thinMarkerButton);
   redrawCanvas();
 });
-buttonContainer.appendChild(thinMarkerButton);
+regularButtonContainer.appendChild(thinMarkerButton);
 
 // Thick marker button
 const thickMarkerButton = document.createElement("button");
@@ -288,29 +288,7 @@ thickMarkerButton.addEventListener("click", () => {
   updateSelectedTool(thickMarkerButton);
   redrawCanvas();
 });
-buttonContainer.appendChild(thickMarkerButton);
-
-// Dynamic sticker button creation
-function createStickerButtons() {
-  // Remove existing sticker buttons
-  const existingStickerButtons = buttonContainer.querySelectorAll(".stickerButton");
-  existingStickerButtons.forEach(button => buttonContainer.removeChild(button));
-
-  // Create new sticker buttons
-  stickersData.forEach(({ emoji, label }) => {
-    const stickerButton = document.createElement("button");
-    stickerButton.className = "stickerButton";
-    stickerButton.textContent = emoji;
-    stickerButton.setAttribute("aria-label", label);
-    stickerButton.addEventListener("click", () => {
-      stickerPreview = new StickerPreview(emoji);
-      toolPreview = null;
-      activeSticker = emoji;
-      updateSelectedTool(stickerButton);
-    });
-    buttonContainer.appendChild(stickerButton);
-  });
-}
+regularButtonContainer.appendChild(thickMarkerButton);
 
 // Custom sticker button
 const customStickerButton = document.createElement("button");
@@ -328,7 +306,40 @@ customStickerButton.addEventListener("click", () => {
     updateSelectedTool(customStickerButton);
   }
 });
-buttonContainer.appendChild(customStickerButton);
+regularButtonContainer.appendChild(customStickerButton);
+
+// Append regular buttons to the main button container
+buttonContainer.appendChild(regularButtonContainer);
+buttonContainer.appendChild(stickerButtonContainer);
+
+// Function to create sticker buttons in 'stickerButtonContainer'
+function createStickerButtons() {
+  // Clear previous sticker buttons
+  stickerButtonContainer.innerHTML = '';
+
+  // Create new sticker buttons
+  stickersData.forEach(({ emoji, label }) => {
+    const stickerButton = document.createElement("button");
+    stickerButton.className = "stickerButton";
+    stickerButton.textContent = emoji;
+    stickerButton.setAttribute("aria-label", label);
+    stickerButton.addEventListener("click", () => {
+      stickerPreview = new StickerPreview(emoji);
+      toolPreview = null;
+      activeSticker = emoji;
+      updateSelectedTool(stickerButton);
+    });
+    stickerButtonContainer.appendChild(stickerButton);
+  });
+}
+
+// Function to update button styles and cursor visibility
+const updateSelectedTool = (selectedButton: HTMLButtonElement) => {
+  const buttons = buttonContainer.querySelectorAll("button");
+  buttons.forEach((button) => button.classList.remove("selectedTool"));
+  selectedButton.classList.add("selectedTool");
+  canvas.classList.add("hide-cursor");
+};
 
 // Initially set the thin marker as selected
 updateSelectedTool(thinMarkerButton);
