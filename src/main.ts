@@ -1,19 +1,27 @@
 import "./style.css";
 
+// Map of words to emojis
+const emojiMap: { [key: string]: string } = {
+  chicken: "🐔",
+  cat: "🐱",
+  dog: "🐶",
+  rabbit: "🐰", // Changed "star" to "rabbit"
+};
+
 const APP_NAME = "Jackie's Art Canvas";
 const app = document.querySelector<HTMLDivElement>("#app")!;
-const stickersData = [
+let stickersData = [
   { emoji: "😀", label: "Smiley" },
   { emoji: "🎨", label: "Palette" },
   { emoji: "🌟", label: "Star" },
 ];
 
-// Define a Point class
+// Define the classes for Point, MarkerLine, and StickerPath
+
 class Point {
   constructor(public x: number, public y: number) {}
 }
 
-// Define a MarkerLine class that includes line styling
 class MarkerLine {
   private points: Point[];
   private lineWidth: number;
@@ -45,7 +53,6 @@ class MarkerLine {
   }
 }
 
-// Define a StickerPath class for handling stickers
 class StickerPath {
   private x: number;
   private y: number;
@@ -64,7 +71,6 @@ class StickerPath {
   }
 }
 
-// Define a ToolPreview class
 class ToolPreview {
   private x: number;
   private y: number;
@@ -95,7 +101,6 @@ class ToolPreview {
   }
 }
 
-// Define a StickerPreview class
 class StickerPreview {
   private x: number = 0;
   private y: number = 0;
@@ -285,22 +290,51 @@ thickMarkerButton.addEventListener("click", () => {
 });
 buttonContainer.appendChild(thickMarkerButton);
 
-// Dynamic sticker buttons
-stickersData.forEach(({ emoji, label }) => {
-  const stickerButton = document.createElement("button");
-  stickerButton.textContent = emoji;
-  stickerButton.setAttribute("aria-label", label);
-  stickerButton.addEventListener("click", () => {
+// Dynamic sticker button creation
+function createStickerButtons() {
+  // Remove existing sticker buttons
+  const existingStickerButtons = buttonContainer.querySelectorAll(".stickerButton");
+  existingStickerButtons.forEach(button => buttonContainer.removeChild(button));
+
+  // Create new sticker buttons
+  stickersData.forEach(({ emoji, label }) => {
+    const stickerButton = document.createElement("button");
+    stickerButton.className = "stickerButton";
+    stickerButton.textContent = emoji;
+    stickerButton.setAttribute("aria-label", label);
+    stickerButton.addEventListener("click", () => {
+      stickerPreview = new StickerPreview(emoji);
+      toolPreview = null;
+      activeSticker = emoji;
+      updateSelectedTool(stickerButton);
+    });
+    buttonContainer.appendChild(stickerButton);
+  });
+}
+
+// Custom sticker button
+const customStickerButton = document.createElement("button");
+customStickerButton.textContent = "Custom Sticker";
+customStickerButton.addEventListener("click", () => {
+  let customSticker = prompt("Enter your custom word:");
+  if (customSticker) {
+    // Convert the custom sticker to an emoji if available
+    const emoji = emojiMap[customSticker] ?? customSticker; // Default to text if no emoji is found
+    stickersData.push({ emoji, label: `Custom: ${customSticker}` });
+    createStickerButtons(); // Regenerate buttons including the new custom sticker
     stickerPreview = new StickerPreview(emoji);
     toolPreview = null;
     activeSticker = emoji;
-    updateSelectedTool(stickerButton);
-  });
-  buttonContainer.appendChild(stickerButton);
+    updateSelectedTool(customStickerButton);
+  }
 });
+buttonContainer.appendChild(customStickerButton);
 
 // Initially set the thin marker as selected
 updateSelectedTool(thinMarkerButton);
+
+// Create initial sticker buttons
+createStickerButtons();
 
 container.appendChild(buttonContainer);
 app.appendChild(container);
