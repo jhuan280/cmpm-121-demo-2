@@ -8,6 +8,16 @@ let stickersData = [
   { emoji: "🌟", label: "Star" },
 ];
 
+// Random color generator
+function getRandomColor(): string {
+  const letters = "0123456789ABCDEF";
+  let color = "#";
+  for (let i = 0; i < 6; i++) {
+    color += letters[Math.floor(Math.random() * 16)];
+  }
+  return color;
+}
+
 // Define the classes for Point, MarkerLine, and StickerPath
 class Point {
   constructor(public x: number, public y: number) {}
@@ -16,7 +26,7 @@ class Point {
 class MarkerLine {
   private points: Point[];
   private lineWidth: number;
-  private color: string; // Color property
+  private color: string;
 
   constructor(initialX: number, initialY: number, lineWidth: number, color: string) {
     this.points = [];
@@ -69,13 +79,13 @@ class ToolPreview {
   private x: number;
   private y: number;
   private lineWidth: number;
-  private color: string; // Add color for preview
+  private color: string;
 
   constructor(lineWidth: number, color: string) {
     this.x = 0;
     this.y = 0;
     this.lineWidth = lineWidth;
-    this.color = color; // Initialize color
+    this.color = color;
   }
 
   update(x: number, y: number) {
@@ -87,15 +97,15 @@ class ToolPreview {
     this.lineWidth = lineWidth;
   }
 
-  setColor(color: string) { // Method to update color
+  setColor(color: string) {
     this.color = color;
   }
 
   draw(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
-    ctx.arc(this.x, this.y, this.lineWidth / 2, 0, Math.PI * 2);
-    ctx.strokeStyle = this.color; // Use the current color
-    ctx.fillStyle = this.color + "4C"; // Make it semi-transparent
+    ctx.arc(this.x, this.y, this.lineWidth, 0, Math.PI * 2); // Use lineWidth for circle size
+    ctx.strokeStyle = this.color;
+    ctx.fillStyle = this.color + "66"; // Semi-transparent to maintain clarity
     ctx.fill();
     ctx.stroke();
   }
@@ -105,6 +115,7 @@ class StickerPreview {
   private x: number = 0;
   private y: number = 0;
   private sticker: string = "";
+  private rotation: number = 0; // Rotation for sticker preview
 
   constructor(sticker: string) {
     this.sticker = sticker;
@@ -119,10 +130,18 @@ class StickerPreview {
     this.sticker = sticker;
   }
 
+  setRotation(rotation: number) {
+    this.rotation = rotation;
+  }
+
   draw(ctx: CanvasRenderingContext2D) {
     if (this.sticker) {
+      ctx.save();
+      ctx.translate(this.x, this.y);
+      ctx.rotate((this.rotation * Math.PI) / 180);
       ctx.font = "30px Arial";
-      ctx.fillText(this.sticker, this.x, this.y);
+      ctx.fillText(this.sticker, 0, 0);
+      ctx.restore();
     }
   }
 }
@@ -154,7 +173,7 @@ let currentColor = "#000000"; // Default to black
 const paths: Array<MarkerLine | StickerPath> = [];
 const redoStack: Array<MarkerLine | StickerPath> = [];
 let currentPath: MarkerLine | null = null;
-let toolPreview: ToolPreview | null = new ToolPreview(currentLineWidth, currentColor); // Pass color to preview
+let toolPreview: ToolPreview | null = new ToolPreview(currentLineWidth, currentColor);
 let stickerPreview: StickerPreview | null = null;
 let activeSticker: string | null = null;
 
@@ -227,7 +246,7 @@ const regularButtonContainer = document.createElement("div");
 regularButtonContainer.className = "regular-button-container";
 
 const colorButtonContainer = document.createElement("div");
-colorButtonContainer.className = "color-button-container"; // Container for color buttons
+colorButtonContainer.className = "color-button-container";
 
 const stickerButtonContainer = document.createElement("div");
 stickerButtonContainer.className = "sticker-button-container";
@@ -272,7 +291,8 @@ regularButtonContainer.appendChild(redoButton);
 const thinMarkerButton = document.createElement("button");
 thinMarkerButton.textContent = "Thin Marker";
 thinMarkerButton.addEventListener("click", () => {
-  currentLineWidth = 1;
+  currentLineWidth = 1; // Set thin line width
+  currentColor = getRandomColor(); // Randomize color
   toolPreview = new ToolPreview(currentLineWidth, currentColor);
   stickerPreview = null;
   activeSticker = null;
@@ -285,7 +305,8 @@ regularButtonContainer.appendChild(thinMarkerButton);
 const thickMarkerButton = document.createElement("button");
 thickMarkerButton.textContent = "Thick Marker";
 thickMarkerButton.addEventListener("click", () => {
-  currentLineWidth = 5;
+  currentLineWidth = 5; // Set thick line width
+  currentColor = getRandomColor(); // Randomize color
   toolPreview = new ToolPreview(currentLineWidth, currentColor);
   stickerPreview = null;
   activeSticker = null;
@@ -300,11 +321,12 @@ customStickerButton.textContent = "Custom Sticker";
 customStickerButton.addEventListener("click", () => {
   let customSticker = prompt("Paste your emoji here:");
   if (customSticker) {
+    activeSticker = customSticker;
     stickersData.push({ emoji: customSticker, label: `Custom: ${customSticker}` });
     createStickerButtons();
     stickerPreview = new StickerPreview(customSticker);
+    stickerPreview.setRotation(0); // Fix rotation to 0 for sticker preview
     toolPreview = null;
-    activeSticker = customSticker;
     updateSelectedTool(customStickerButton);
   }
 });
@@ -331,24 +353,18 @@ exportButton.addEventListener("click", () => {
 regularButtonContainer.appendChild(exportButton);
 
 // Color buttons
-['Black', 'Red', 'Blue', 'Green'].forEach(colorName => {
+const colorOptions = {
+  Black: "#000000",
+  Red: "#ff0000",
+  Blue: "#0000ff",
+  Green: "#008000"
+};
+
+Object.entries(colorOptions).forEach(([colorName, hex]) => {
   const colorButton = document.createElement("button");
   colorButton.textContent = colorName;
   colorButton.addEventListener("click", () => {
-    switch(colorName) {
-      case 'Black':
-        currentColor = "#000000"; // Black as the default color
-        break;
-      case 'Red':
-        currentColor = "#ff0000";
-        break;
-      case 'Blue':
-        currentColor = "#0000ff";
-        break;
-      case 'Green':
-        currentColor = "#008000";
-        break;
-    }
+    currentColor = hex; // Set to specified color
     toolPreview?.setColor(currentColor); // Update the preview color
     updateSelectedTool(colorButton);
   });
@@ -357,7 +373,7 @@ regularButtonContainer.appendChild(exportButton);
 
 // Append button containers to the main button container
 buttonContainer.appendChild(regularButtonContainer);
-buttonContainer.appendChild(colorButtonContainer); // Append the color button container
+buttonContainer.appendChild(colorButtonContainer);
 buttonContainer.appendChild(stickerButtonContainer);
 
 // Function to create sticker buttons in 'stickerButtonContainer'
@@ -372,9 +388,10 @@ function createStickerButtons() {
     stickerButton.textContent = emoji;
     stickerButton.setAttribute("aria-label", label);
     stickerButton.addEventListener("click", () => {
-      stickerPreview = new StickerPreview(emoji);
-      toolPreview = null;
       activeSticker = emoji;
+      stickerPreview = new StickerPreview(emoji);
+      stickerPreview.setRotation(0); // Ensure rotation is set to 0
+      toolPreview = null;
       updateSelectedTool(stickerButton);
     });
     stickerButtonContainer.appendChild(stickerButton);
