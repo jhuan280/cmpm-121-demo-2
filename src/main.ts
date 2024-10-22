@@ -16,10 +16,12 @@ class Point {
 class MarkerLine {
   private points: Point[];
   private lineWidth: number;
+  private color: string; // Color property
 
-  constructor(initialX: number, initialY: number, lineWidth: number) {
+  constructor(initialX: number, initialY: number, lineWidth: number, color: string) {
     this.points = [];
     this.lineWidth = lineWidth;
+    this.color = color;
     this.addPoint(initialX, initialY);
   }
 
@@ -35,6 +37,7 @@ class MarkerLine {
     if (this.points.length === 0) return;
 
     ctx.lineWidth = this.lineWidth;
+    ctx.strokeStyle = this.color;
     ctx.beginPath();
     ctx.moveTo(this.points[0].x, this.points[0].y);
     this.points.forEach((point) => {
@@ -141,6 +144,7 @@ container.appendChild(canvas);
 const context = canvas.getContext("2d")!;
 let isDrawing = false;
 let currentLineWidth = 1;
+let currentColor = "#000000"; // Default to black
 const paths: Array<MarkerLine | StickerPath> = [];
 const redoStack: Array<MarkerLine | StickerPath> = [];
 let currentPath: MarkerLine | null = null;
@@ -158,7 +162,7 @@ const startDrawing = (event: MouseEvent) => {
     paths.push(stickerPath);
   } else {
     isDrawing = true;
-    currentPath = new MarkerLine(x, y, currentLineWidth);
+    currentPath = new MarkerLine(x, y, currentLineWidth, currentColor);
     paths.push(currentPath);
     redoStack.length = 0;
   }
@@ -215,6 +219,9 @@ buttonContainer.className = "button-container";
 
 const regularButtonContainer = document.createElement("div");
 regularButtonContainer.className = "regular-button-container";
+
+const colorButtonContainer = document.createElement("div");
+colorButtonContainer.className = "color-button-container"; // Container for color buttons
 
 const stickerButtonContainer = document.createElement("div");
 stickerButtonContainer.className = "sticker-button-container";
@@ -288,7 +295,7 @@ customStickerButton.addEventListener("click", () => {
   let customSticker = prompt("Paste your emoji here:");
   if (customSticker) {
     stickersData.push({ emoji: customSticker, label: `Custom: ${customSticker}` });
-    createStickerButtons(); // Regenerate buttons including the new custom sticker
+    createStickerButtons();
     stickerPreview = new StickerPreview(customSticker);
     toolPreview = null;
     activeSticker = customSticker;
@@ -306,11 +313,9 @@ exportButton.addEventListener("click", () => {
   exportCanvas.height = 1024;
   const exportContext = exportCanvas.getContext("2d")!;
 
-  // Scale up the existing drawing (scale factor = 4, since 1024 is 4 times 256)
   exportContext.scale(4, 4);
   paths.forEach(path => path.display(exportContext));
 
-  // Download the image
   const dataURL = exportCanvas.toDataURL('image/png');
   const link = document.createElement('a');
   link.href = dataURL;
@@ -319,8 +324,33 @@ exportButton.addEventListener("click", () => {
 });
 regularButtonContainer.appendChild(exportButton);
 
-// Append regular buttons to the main button container
+// Color buttons
+['Black', 'Red', 'Blue', 'Green'].forEach(colorName => {
+  const colorButton = document.createElement("button");
+  colorButton.textContent = colorName;
+  colorButton.addEventListener("click", () => {
+    switch(colorName) {
+      case 'Black':
+        currentColor = "#000000"; // Black as the default color
+        break;
+      case 'Red':
+        currentColor = "#ff0000";
+        break;
+      case 'Blue':
+        currentColor = "#0000ff";
+        break;
+      case 'Green':
+        currentColor = "#008000";
+        break;
+    }
+    updateSelectedTool(colorButton);
+  });
+  colorButtonContainer.appendChild(colorButton);
+});
+
+// Append button containers to the main button container
 buttonContainer.appendChild(regularButtonContainer);
+buttonContainer.appendChild(colorButtonContainer); // Append the color button container
 buttonContainer.appendChild(stickerButtonContainer);
 
 // Function to create sticker buttons in 'stickerButtonContainer'
