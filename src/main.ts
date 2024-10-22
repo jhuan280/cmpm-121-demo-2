@@ -251,6 +251,11 @@ colorButtonContainer.className = "color-button-container";
 const stickerButtonContainer = document.createElement("div");
 stickerButtonContainer.className = "sticker-button-container";
 
+// Fixed color label
+const fixedColorLabel = document.createElement("span");
+fixedColorLabel.textContent = "Fixed Color: ";
+colorButtonContainer.appendChild(fixedColorLabel);
+
 // Add all buttons to their respective containers
 
 // Clear button
@@ -337,7 +342,7 @@ const exportButton = document.createElement("button");
 exportButton.textContent = "Export";
 exportButton.addEventListener("click", () => {
   const exportCanvas = document.createElement("canvas");
-  exportCanvas.width = 1024; 
+  exportCanvas.width = 1024;
   exportCanvas.height = 1024;
   const exportContext = exportCanvas.getContext("2d")!;
 
