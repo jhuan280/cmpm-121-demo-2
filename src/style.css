@@ -5,7 +5,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #e0f7fa; /* Light-blue background */
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -28,6 +28,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  background-color: #e0f7fa; /* Light-blue background for the body */
 }
 
 h1 {
@@ -84,7 +85,7 @@ button:focus-visible {
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;
-    background-color: #ffffff;
+    background-color: #e0f7fa; /* Light-blue background */
   }
   a:hover {
     color: #747bff;
@@ -100,6 +101,7 @@ canvas {
   border: 1px solid #000; /* Thin black border */
   border-radius: 8px; /* Rounded corners */
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Drop shadow effect */
+  background-color: #ffffff; /* White background on the canvas */
 }
 
 .canvas-container {
