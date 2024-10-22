@@ -114,6 +114,16 @@ canvas {
   margin-top: 10px;
 }
 
+/* Margins for each button container to space out rows */
+
+.regular-button-container {
+  margin-bottom: 20px; /* Space between regular and color buttons */
+}
+
+.color-button-container {
+  margin-bottom: 20px; /* Space between color and sticker buttons */
+}
+
 /* ------------------- Select ------------------------ */
 
 button.selectedTool {
