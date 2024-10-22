@@ -9,7 +9,6 @@ let stickersData = [
 ];
 
 // Define the classes for Point, MarkerLine, and StickerPath
-
 class Point {
   constructor(public x: number, public y: number) {}
 }
@@ -297,6 +296,28 @@ customStickerButton.addEventListener("click", () => {
   }
 });
 regularButtonContainer.appendChild(customStickerButton);
+
+// Export button
+const exportButton = document.createElement("button");
+exportButton.textContent = "Export";
+exportButton.addEventListener("click", () => {
+  const exportCanvas = document.createElement("canvas");
+  exportCanvas.width = 1024; 
+  exportCanvas.height = 1024;
+  const exportContext = exportCanvas.getContext("2d")!;
+
+  // Scale up the existing drawing (scale factor = 4, since 1024 is 4 times 256)
+  exportContext.scale(4, 4);
+  paths.forEach(path => path.display(exportContext));
+
+  // Download the image
+  const dataURL = exportCanvas.toDataURL('image/png');
+  const link = document.createElement('a');
+  link.href = dataURL;
+  link.download = 'artwork.png';
+  link.click();
+});
+regularButtonContainer.appendChild(exportButton);
 
 // Append regular buttons to the main button container
 buttonContainer.appendChild(regularButtonContainer);
