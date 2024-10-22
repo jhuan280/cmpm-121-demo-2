@@ -69,11 +69,13 @@ class ToolPreview {
   private x: number;
   private y: number;
   private lineWidth: number;
+  private color: string; // Add color for preview
 
-  constructor(lineWidth: number) {
+  constructor(lineWidth: number, color: string) {
     this.x = 0;
     this.y = 0;
     this.lineWidth = lineWidth;
+    this.color = color; // Initialize color
   }
 
   update(x: number, y: number) {
@@ -85,11 +87,15 @@ class ToolPreview {
     this.lineWidth = lineWidth;
   }
 
+  setColor(color: string) { // Method to update color
+    this.color = color;
+  }
+
   draw(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.lineWidth / 2, 0, Math.PI * 2);
-    ctx.strokeStyle = "#888";
-    ctx.fillStyle = "rgba(136, 136, 136, 0.3)";
+    ctx.strokeStyle = this.color; // Use the current color
+    ctx.fillStyle = this.color + "4C"; // Make it semi-transparent
     ctx.fill();
     ctx.stroke();
   }
@@ -148,7 +154,7 @@ let currentColor = "#000000"; // Default to black
 const paths: Array<MarkerLine | StickerPath> = [];
 const redoStack: Array<MarkerLine | StickerPath> = [];
 let currentPath: MarkerLine | null = null;
-let toolPreview: ToolPreview | null = new ToolPreview(currentLineWidth);
+let toolPreview: ToolPreview | null = new ToolPreview(currentLineWidth, currentColor); // Pass color to preview
 let stickerPreview: StickerPreview | null = null;
 let activeSticker: string | null = null;
 
@@ -267,7 +273,7 @@ const thinMarkerButton = document.createElement("button");
 thinMarkerButton.textContent = "Thin Marker";
 thinMarkerButton.addEventListener("click", () => {
   currentLineWidth = 1;
-  toolPreview = new ToolPreview(currentLineWidth);
+  toolPreview = new ToolPreview(currentLineWidth, currentColor);
   stickerPreview = null;
   activeSticker = null;
   updateSelectedTool(thinMarkerButton);
@@ -280,7 +286,7 @@ const thickMarkerButton = document.createElement("button");
 thickMarkerButton.textContent = "Thick Marker";
 thickMarkerButton.addEventListener("click", () => {
   currentLineWidth = 5;
-  toolPreview = new ToolPreview(currentLineWidth);
+  toolPreview = new ToolPreview(currentLineWidth, currentColor);
   stickerPreview = null;
   activeSticker = null;
   updateSelectedTool(thickMarkerButton);
@@ -343,6 +349,7 @@ regularButtonContainer.appendChild(exportButton);
         currentColor = "#008000";
         break;
     }
+    toolPreview?.setColor(currentColor); // Update the preview color
     updateSelectedTool(colorButton);
   });
   colorButtonContainer.appendChild(colorButton);
