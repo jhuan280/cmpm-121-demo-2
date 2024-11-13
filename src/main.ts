@@ -8,6 +8,18 @@ let stickersData = [
   { emoji: "🌟", label: "Star" },
 ];
 
+// Canvas Dimensions
+const CANVAS_WIDTH = 256;
+const CANVAS_HEIGHT = 256;
+
+// Marker Line Widths
+const THIN_LINE_WIDTH = 1;
+const THICK_LINE_WIDTH = 5;
+
+// Canvas Scale Sizes
+const CANVAS_SCALE = 4;
+const EXPORT_CANVAS_SIZE = 1024;
+
 // Random color generator
 function getRandomColor(): string {
   const letters = "0123456789ABCDEF";
@@ -160,15 +172,15 @@ container.className = "canvas-container";
 
 const canvas = document.createElement("canvas");
 canvas.classList.add("hide-cursor");
-canvas.width = 256;
-canvas.height = 256;
+canvas.width = CANVAS_WIDTH;
+canvas.height = CANVAS_HEIGHT;
 container.appendChild(canvas);
 
 //-------------------------Drawing with mouse -------------------------
 
 const context = canvas.getContext("2d")!;
 let isDrawing = false;
-let currentLineWidth = 1;
+let currentLineWidth = THIN_LINE_WIDTH;
 let currentColor = "#000000"; // Default to black
 const paths: Array<MarkerLine | StickerPath> = [];
 const redoStack: Array<MarkerLine | StickerPath> = [];
@@ -296,7 +308,7 @@ regularButtonContainer.appendChild(redoButton);
 const thinMarkerButton = document.createElement("button");
 thinMarkerButton.textContent = "Thin Marker";
 thinMarkerButton.addEventListener("click", () => {
-  currentLineWidth = 1; // Set thin line width
+  currentLineWidth = THIN_LINE_WIDTH; // Set thin line width
   currentColor = getRandomColor(); // Randomize color
   toolPreview = new ToolPreview(currentLineWidth, currentColor);
   stickerPreview = null;
@@ -310,7 +322,7 @@ regularButtonContainer.appendChild(thinMarkerButton);
 const thickMarkerButton = document.createElement("button");
 thickMarkerButton.textContent = "Thick Marker";
 thickMarkerButton.addEventListener("click", () => {
-  currentLineWidth = 5; // Set thick line width
+  currentLineWidth = THICK_LINE_WIDTH; // Set thick line width
   currentColor = getRandomColor(); // Randomize color
   toolPreview = new ToolPreview(currentLineWidth, currentColor);
   stickerPreview = null;
@@ -342,11 +354,11 @@ const exportButton = document.createElement("button");
 exportButton.textContent = "Export";
 exportButton.addEventListener("click", () => {
   const exportCanvas = document.createElement("canvas");
-  exportCanvas.width = 1024;
-  exportCanvas.height = 1024;
+  exportCanvas.width = EXPORT_CANVAS_SIZE;
+  exportCanvas.height = EXPORT_CANVAS_SIZE;
   const exportContext = exportCanvas.getContext("2d")!;
 
-  exportContext.scale(4, 4);
+  exportContext.scale(CANVAS_SCALE, CANVAS_SCALE);
   paths.forEach(path => path.display(exportContext));
 
   const dataURL = exportCanvas.toDataURL('image/png');
